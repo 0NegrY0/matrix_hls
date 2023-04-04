@@ -6,7 +6,7 @@ Obrigado Cat FM Radio por ajudar a manter minha sanidade durante esse projeto.
 
 
 
-TEM UM VERILOG PERDIDO EM ALGUM LUGAR AE
+TEM UM VHDL PERDIDO EM ALGUM LUGAR AE
 
 ⠀⠀⠀⠀⠀⠀⠀⣀⠤⠒⠒⠒⢤⣀⠤⠄⠠⢤⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⢀⠞⠁⠠⠔⠒⠒⠒⢵⡤⠤⠤⠤⠧⣀⠀⠀⠀⠀
