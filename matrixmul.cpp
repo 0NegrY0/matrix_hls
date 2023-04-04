@@ -52,6 +52,7 @@ void matrixmul(
 	  mat_d_t d[MAT_D_ROWs][MAT_D_COLS],
       result_t res_a_b[MAT_A_ROWS][MAT_B_COLS],
       result_t res_c_d[MAT_C_ROWS][MAT_D_COLS],
+	result_t res_add[MAT_A_ROWS][MAT_D_COLS],
 	  result_t mf[MAT_A_ROWS][MAT_D_COLS]
 )
 {
