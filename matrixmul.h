@@ -51,14 +51,14 @@ using namespace std;
 
 
 
-#define MAT_A_ROWS 6
-#define MAT_A_COLS 6
-#define MAT_B_ROWS 6
-#define MAT_B_COLS 6
-#define MAT_C_ROWS 6
-#define MAT_C_COLS 6
-#define MAT_D_ROWS 6
-#define MAT_D_COLS 6
+#define MAT_A_ROWS 2
+#define MAT_A_COLS 2
+#define MAT_B_ROWS 2
+#define MAT_B_COLS 2
+#define MAT_C_ROWS 2
+#define MAT_C_COLS 2
+#define MAT_D_ROWS 2
+#define MAT_D_COLS 2
 
 
 typedef unsigned char mat_a_t; //8bits
