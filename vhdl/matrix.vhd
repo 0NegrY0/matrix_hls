@@ -50,9 +50,179 @@ architecture Behavioral of matrix is
     type state is (err,s0,s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12);
     signal CE_1, NE_1 : state;
 
+    --PO---------------------------------------------------------------------------
+    signal saidaMuxA : std_logic_vector(63 downto 0);
+    signal selMuxA : std_logic_vector (1 downto 0);
+    signal saidaMuxB : std_logic_vector(63 downto 0);
+    signal selMuxB : std_logic_vector (1 downto 0);
+    signal saidaMuxSoma : std_logic_vector(63 downto 0);
+    signal selMuxSoma : std_logic;
+
+
+
+
+    signal selULA : std_logic_vector(3 downto 0);
+    signal saidaULA : std_logic_vector (63 downto 0);
+
+    signal reg_Res1 : std_logic_vector (63 downto 0);
+    signal reg_Res2 : std_logic_vector (63 downto 0);
+    signal reg1 : std_logic_vector (63 downto 0);
+    signal reg2 : std_logic_vector (63 downto 0);
+    signal regsoma : std_logic_vector (63 downto 0);
+    signal regfim : std_logic_vector (63 downto 0);
+
+    signal carga1, carga2, carga3, carga4 : std_logic;
+
+    
+    signal saidaRegSoma : std_logic_vector (63 downto 0);
+
+
+
 
 begin
 
+    mux4x1A: process(selMuxA, saidaMuxA, matrixA, matrixC, reg_res1)
+    begin
+        case selMuxA is
+            when "00" =>
+                saidaMuxA <= matrixA;
+            when "01" =>
+                saidaMuxA <= matrixC;
+            when "10" =>
+                saidaMuxA <= reg_res1;
+            when others =>
+                saidaMuxA <= (others => '0');
+        end case;
+    end process;
+    
+    mux4x1B: process(selMuxB, saidaMuxB, matrixB, matrixD, reg_res2)
+    begin
+        case selMuxB is
+            when "00" =>
+                saidaMuxB <= matrixB;
+            when "01" =>
+                saidaMuxB <= matrixD;
+            when "10" =>
+                saidaMuxB <= reg_res2;
+            when others =>
+                saidaMuxB <= (others => '0');
+        end case;
+    end process;
+       
+    muxSoma: process (selMuxSoma, saidaRegSoma, saidaMuxA, saidaMuxSoma)
+    begin 
+        case selMuxSoma is
+            when '0' =>
+                saidaMuxSoma <= saidaMuxA;
+            when '1' =>
+                saidaMuxSoma <= saidaRegSoma;
+            when others =>
+                saidaMuxSoma <= (others => '0');
+        end case;
+    end process;
+    
+    ULA: process (saidaMuxSoma, saidaMuxB, selULA, saidaULA)
+    begin
+        case selULA is
+            when "0000" =>                  --multiplicação de matrix 8bits
+                saidaULA(7 downto 0) <= std_logic_vector((unsigned(saidaMuxSoma(7 downto 0)) * unsigned(saidaMuxB(7 downto 0))) + (unsigned(saidaMuxSoma(15 downto 8)) * unsigned(saidaMuxB(23 downto 16))));
+                saidaULA(15 downto 8) <= std_logic_vector((unsigned(saidaMuxSoma(7 downto 0)) * unsigned(saidaMuxB(15 downto 8))) + (unsigned(saidaMuxSoma(15 downto 8)) * unsigned(saidaMuxB(32 downto 24))));
+                saidaULA(23 downto 16) <= std_logic_vector((unsigned(saidaMuxSoma(23 downto 16)) * unsigned(saidaMuxB(7 downto 0))) + (unsigned(saidaMuxSoma(32 downto 24)) * unsigned(saidaMuxB(23 downto 16))));
+                saidaULA(32 downto 24) <= std_logic_vector((unsigned(saidaMuxSoma(23 downto 16)) * unsigned(saidaMuxB(15 downto 8))) + (unsigned(saidaMuxSoma(32 downto 24)) * unsigned(saidaMuxB(32 downto 24))));
+            
+            when "0001" =>                  --soma matrix 16bits    
+                saidaULA(7 downto 0) <= std_logic_vector(unsigned(saidaMuxSoma(7 downto 0)) + unsigned(saidaMuxB(7 downto 0))); 
+                saidaULA(15 downto 8) <= std_logic_vector(unsigned(saidaMuxSoma(15 downto 8)) + unsigned(saidaMuxB(15 downto 8)));
+                saidaULA(23 downto 16) <= std_logic_vector(unsigned(saidaMuxSoma(23 downto 16)) + unsigned(saidaMuxB(23 downto 16)));
+                saidaULA(32 downto 24) <= std_logic_vector(unsigned(saidaMuxSoma(32 downto 24)) + unsigned(saidaMuxB(32 downto 24)));
+            
+            when "0010" =>                   --teste matrix 16bits
+                if(saidaMuxSoma(7 downto 0) >= "0000010000011010") then          --mair ou igual a 1050
+                    matrixF(7 downto 0) <= (others => '0');
+                else
+                    matrixF(7 downto 0) <= saidaMuxSoma(7 downto 0);
+                end if;                    
+                
+                if(saidaMuxSoma(15 downto 8) >= "0000010000011010") then          --mair ou igual a 1050
+                    saidaULA(15 downto 8) <= (others => '0');
+                else
+                    saidaULA(15 downto 8) <= saidaMuxSoma(15 downto 8);
+                end if;
+                
+                if(saidaMuxSoma(23 downto 16) >= "0000010000011010") then          --mair ou igual a 1050
+                    saidaULA(23 downto 16) <= (others => '0');
+                else
+                    saidaULA(23 downto 16) <= saidaMuxSoma(23 downto 16);
+                end if;
+                
+                if(saidaMuxSoma(32 downto 24) >= "0000010000011010") then          --mair ou igual a 1050
+                    saidaULA(32 downto 24) <= (others => '0');
+                else
+                    saidaULA(32 downto 24) <= saidaMuxSoma(32 downto 24);
+                end if;
+
+            when others =>
+                saidaULA <= (others => '0');
+        end case;
+            
+    end process;
+        
+        
+    regres1: process(clk, rst)
+    begin
+        if rst = '1' then
+            reg1 <= (others => '0');
+        elsif (rising_edge(clk)) then
+            if(carga1 = '1') then
+                reg1 <= saidaULA;
+            end if;
+        end if;
+    end process;
+    reg_Res1 <= reg1;
+    
+    
+    regres2: process(clk, rst)
+    begin
+        if rst = '1' then
+            reg2 <= (others => '0');
+        elsif (rising_edge(clk)) then
+            if(carga2 = '1') then
+                reg2 <= saidaULA;
+            end if;
+        end if;
+    end process;
+    reg_Res2 <= reg2;
+
+    regres3: process(clk, rst)
+    begin
+        if rst = '1' then
+            reg1 <= (others => '0');
+        elsif (rising_edge(clk)) then
+            if(carga3 = '1') then
+                regsoma <= saidaULA;
+            end if;
+        end if;
+    end process;
+    reg_Res <= regsoma;
+
+    regres4: process(clk, rst)
+    begin
+        if rst = '1' then
+            reg1 <= (others => '0');
+        elsif (rising_edge(clk)) then
+            if(carga1 = '1') then
+                reg1 <= saidaULA;
+            end if;
+        end if;
+    end process;
+    reg_Res1 <= reg1;
+
+
+
+
+
+
+------------------------------------------------------------------------------------------
     FSM:process(clk, rst)
     begin
         if(rst = '1') then
