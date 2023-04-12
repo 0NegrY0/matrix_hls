@@ -1,8 +1,8 @@
 ----------------------------------------------------------------------------------
 -- Company: 
--- Engineer: 
+-- Engineer: Carlos Negri
 -- 
--- Create Date: 04.04.2023 08:50:58
+-- Create Date: 11.04.2023 17:04:21
 -- Design Name: 
 -- Module Name: matrix - Behavioral
 -- Project Name: 
@@ -43,260 +43,328 @@ end matrix;
 
 architecture Behavioral of matrix is
 
-    signal matA_B : STD_LOGIC_VECTOR(63 downto 0);
-    signal matC_D : STD_LOGIC_VECTOR(63 downto 0);
-    signal mat_ADD : STD_LOGIC_VECTOR(63 downto 0);
-    
-    type state is (err,s0,s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12);
-    signal CE_1, NE_1 : state;
+--Variaveis Parte Operativa***********************************************************************
 
-    --PO---------------------------------------------------------------------------
-    signal saidaMuxA : std_logic_vector(63 downto 0);
-    signal selMuxA : std_logic_vector (1 downto 0);
-    signal saidaMuxB : std_logic_vector(63 downto 0);
-    signal selMuxB : std_logic_vector (1 downto 0);
-    signal saidaMuxSoma : std_logic_vector(63 downto 0);
-    signal selMuxSoma : std_logic;
+--Registradores de entrada
+signal regA : std_logic_vector(31 downto 0);
+signal regAsaida : std_logic_vector(31 downto 0);
+signal cargaA : std_logic;
+signal regB : std_logic_vector(31 downto 0);
+signal regBsaida : std_logic_vector(31 downto 0);
+signal cargaB : std_logic;
+signal regC : std_logic_vector(31 downto 0);
+signal regCsaida : std_logic_vector(31 downto 0);
+signal cargaC : std_logic;
+signal regD : std_logic_vector(31 downto 0);
+signal regDsaida : std_logic_vector(31 downto 0);
+signal cargaD : std_logic;
 
+--multiplexadores 1
+signal saida1MuxAB : std_logic_vector(63 downto 0);
+signal saida2MuxAB : std_logic_vector(63 downto 0);
+signal saida1MuxCD : std_logic_vector(63 downto 0);
+signal saida2MuxCD : std_logic_vector(63 downto 0);
 
-
-
-    signal selULA : std_logic_vector(3 downto 0);
-    signal saidaULA : std_logic_vector (63 downto 0);
-
-    signal reg_Res1 : std_logic_vector (63 downto 0);
-    signal reg_Res2 : std_logic_vector (63 downto 0);
-    signal reg1 : std_logic_vector (63 downto 0);
-    signal reg2 : std_logic_vector (63 downto 0);
-    signal regsoma : std_logic_vector (63 downto 0);
-    signal regfim : std_logic_vector (63 downto 0);
-
-    signal carga1, carga2, carga3, carga4 : std_logic;
-
-    
-    signal saidaRegSoma : std_logic_vector (63 downto 0);
+--somadores
+signal saidaSomador1 : std_logic_vector(63 downto 0);
+signal saidaSomador2 : std_logic_vector(63 downto 0);
+signal saidaSomador3 : std_logic_vector(63 downto 0);
 
 
+--RegistradoresSoma
+signal regSomaAB : std_logic_vector(63 downto 0);
+signal regSomaABsaida : std_logic_vector(63 downto 0);
+signal cargaSomaAB : std_logic;
+signal regSomaCD : std_logic_vector(63 downto 0);
+signal regSomaCDsaida : std_logic_vector(63 downto 0);
+signal cargaSomaCD : std_logic;
+signal regSomaFim : std_logic_vector(63 downto 0);
+signal regSomaFimsaida : std_logic_vector(63 downto 0);
+signal cargaSomaFim : std_logic;
 
+--Testador
+signal saidaTestador : std_logic_vector(63 downto 0);
+
+--RegistradorFinal
+signal regFim : std_logic_vector(63 downto 0);
+--signal regFimSaida : std_logic_vector(63 downto 0);         --saida diretamente na matrixF
+signal cargaFim : std_logic;
+
+--************************************************************************************************
+
+
+--Variaveis Parte de Controle*********************************************************************
+
+--FSM
+type state is (err,s0,s2,s3,s4,s5);
+signal CE, NE : state;
+
+--************************************************************************************************
 
 begin
 
-    mux4x1A: process(selMuxA, saidaMuxA, matrixA, matrixC, reg_res1)
-    begin
-        case selMuxA is
-            when "00" =>
-                saidaMuxA <= matrixA;
-            when "01" =>
-                saidaMuxA <= matrixC;
-            when "10" =>
-                saidaMuxA <= reg_res1;
-            when others =>
-                saidaMuxA <= (others => '0');
-        end case;
-    end process;
+
+--Parte Operativa*********************************************************************************
+
+--Registradores de entrada------------------------------------------------
+regA_op:process(clk, rst)
+begin
+    if rst = '1' then
+        regA <= (others => '0');
+    elsif (rising_edge(clk)) then
+        if(cargaA = '1') then
+            regA <= matrixA;
+        end if;
+    end if;
+end process;
+regAsaida <= regA;
+
+regB_op:process(clk, rst)
+begin
+    if rst = '1' then
+        regB <= (others => '0');
+    elsif (rising_edge(clk)) then
+        if(cargaB = '1') then
+            regB <= matrixB;
+        end if;
+    end if;
+end process;
+regBsaida <= regB;
+
+regC_op:process(clk, rst)
+begin
+    if rst = '1' then
+        regC <= (others => '0');
+    elsif (rising_edge(clk)) then
+        if(cargaC = '1') then
+            regC <= matrixC;
+        end if;
+    end if;
+end process;
+regCsaida <= regC;
+
+regD_op:process(clk, rst)
+begin
+    if rst = '1' then
+        regD <= (others => '0');
+    elsif (rising_edge(clk)) then
+        if(cargaD = '1') then
+            regD <= matrixD;
+        end if;
+    end if;
+end process;
+regDsaida <= regD;
+--------------------------------------------------------------------------
+
+--------------------------------------------------------------------------
+mux1_1:process(regAsaida, regBsaida, saida1MuxAB, saida2MuxCD)
+begin
+    saida1MuxAB(15 downto 0) <= std_logic_vector((unsigned(regAsaida(7 downto 0)) * unsigned(regBsaida(7 downto 0))));
+    saida2MuxAB(15 downto 0) <= std_logic_vector((unsigned(regAsaida(15 downto 8)) * unsigned(regBsaida(23 downto 16))));
     
-    mux4x1B: process(selMuxB, saidaMuxB, matrixB, matrixD, reg_res2)
-    begin
-        case selMuxB is
-            when "00" =>
-                saidaMuxB <= matrixB;
-            when "01" =>
-                saidaMuxB <= matrixD;
-            when "10" =>
-                saidaMuxB <= reg_res2;
-            when others =>
-                saidaMuxB <= (others => '0');
-        end case;
-    end process;
-       
-    muxSoma: process (selMuxSoma, saidaRegSoma, saidaMuxA, saidaMuxSoma)
-    begin 
-        case selMuxSoma is
-            when '0' =>
-                saidaMuxSoma <= saidaMuxA;
-            when '1' =>
-                saidaMuxSoma <= saidaRegSoma;
-            when others =>
-                saidaMuxSoma <= (others => '0');
-        end case;
-    end process;
+    saida1MuxAB(31 downto 16) <= std_logic_vector((unsigned(regAsaida(7 downto 0)) * unsigned(regBsaida(15 downto 8))));
+    saida2MuxAB(31 downto 16) <= std_logic_vector((unsigned(regAsaida(15 downto 8)) * unsigned(regBsaida(31 downto 24))));
     
-    ULA: process (saidaMuxSoma, saidaMuxB, selULA, saidaULA)
-    begin
-        case selULA is
-            when "0000" =>                  --multiplicação de matrix 8bits
-                saidaULA(7 downto 0) <= std_logic_vector((unsigned(saidaMuxSoma(7 downto 0)) * unsigned(saidaMuxB(7 downto 0))) + (unsigned(saidaMuxSoma(15 downto 8)) * unsigned(saidaMuxB(23 downto 16))));
-                saidaULA(15 downto 8) <= std_logic_vector((unsigned(saidaMuxSoma(7 downto 0)) * unsigned(saidaMuxB(15 downto 8))) + (unsigned(saidaMuxSoma(15 downto 8)) * unsigned(saidaMuxB(32 downto 24))));
-                saidaULA(23 downto 16) <= std_logic_vector((unsigned(saidaMuxSoma(23 downto 16)) * unsigned(saidaMuxB(7 downto 0))) + (unsigned(saidaMuxSoma(32 downto 24)) * unsigned(saidaMuxB(23 downto 16))));
-                saidaULA(32 downto 24) <= std_logic_vector((unsigned(saidaMuxSoma(23 downto 16)) * unsigned(saidaMuxB(15 downto 8))) + (unsigned(saidaMuxSoma(32 downto 24)) * unsigned(saidaMuxB(32 downto 24))));
+    saida1MuxAB(47 downto 32) <= std_logic_vector((unsigned(regAsaida(23 downto 16)) * unsigned(regBsaida(7 downto 0))));
+    saida2MuxAB(47 downto 32) <= std_logic_vector((unsigned(regAsaida(31 downto 24)) * unsigned(regBsaida(23 downto 16))));
+  
+    saida1MuxAB(63 downto 48) <= std_logic_vector((unsigned(regAsaida(23 downto 16)) * unsigned(regBsaida(15 downto 8))));
+    saida2MuxAB(63 downto 48) <= std_logic_vector((unsigned(regAsaida(31 downto 24)) * unsigned(regBsaida(31 downto 24))));
+end process;   
+
+mux1_2:process(regCsaida, regDsaida, saida1MuxCD, saida2MuxCD)
+begin
+    saida1MuxCD(15 downto 0) <= std_logic_vector((unsigned(regCsaida(7 downto 0)) * unsigned(regDsaida(7 downto 0))));
+    saida2MuxCD(15 downto 0) <= std_logic_vector((unsigned(regCsaida(15 downto 8)) * unsigned(regDsaida(23 downto 16))));
+    
+    saida1MuxCD(31 downto 16) <= std_logic_vector((unsigned(regCsaida(7 downto 0)) * unsigned(regDsaida(15 downto 8))));
+    saida2MuxCD(31 downto 16) <= std_logic_vector((unsigned(regCsaida(15 downto 8)) * unsigned(regDsaida(31 downto 24))));
+  
+    saida1MuxCD(47 downto 32) <= std_logic_vector((unsigned(regCsaida(23 downto 16)) * unsigned(regDsaida(7 downto 0))));
+    saida2MuxCD(47 downto 32) <= std_logic_vector((unsigned(regCsaida(31 downto 24)) * unsigned(regDsaida(23 downto 16))));
+  
+    saida1MuxCD(63 downto 48) <= std_logic_vector((unsigned(regCsaida(23 downto 16)) * unsigned(regDsaida(15 downto 8))));
+    saida2MuxCD(63 downto 48) <= std_logic_vector((unsigned(regCsaida(31 downto 24)) * unsigned(regDsaida(31 downto 24))));
+end process;    
+--------------------------------------------------------------------------
+
+--------------------------------------------------------------------------
+somador1:process(saida1MuxAB, saida2MuxAB, saidaSomador1)
+begin
+    saidaSomador1(15 downto 0) <= std_logic_vector(unsigned(saida1MuxAB(15 downto 0)) + unsigned(saida2MuxAB(15 downto 0))); 
+    saidaSomador1(31 downto 16) <= std_logic_vector(unsigned(saida1MuxAB(31 downto 16)) + unsigned(saida2MuxAB(31 downto 16))); 
+    saidaSomador1(47 downto 32) <= std_logic_vector(unsigned(saida1MuxAB(47 downto 32)) + unsigned(saida2MuxAB(47 downto 32))); 
+    saidaSomador1(63 downto 48) <= std_logic_vector(unsigned(saida1MuxAB(63 downto 48)) + unsigned(saida2MuxAB(63 downto 48)));
+end process;
+
+somador2:process(saida1MuxCD, saida2MuxCD, saidaSomador2)
+begin
+    saidaSomador2(15 downto 0) <= std_logic_vector(unsigned(saida1MuxCD(15 downto 0)) + unsigned(saida2MuxCD(15 downto 0))); 
+    saidaSomador2(31 downto 16) <= std_logic_vector(unsigned(saida1MuxCD(31 downto 16)) + unsigned(saida2MuxCD(31 downto 16))); 
+    saidaSomador2(47 downto 32) <= std_logic_vector(unsigned(saida1MuxCD(47 downto 32)) + unsigned(saida2MuxCD(47 downto 32))); 
+    saidaSomador2(63 downto 48) <= std_logic_vector(unsigned(saida1MuxCD(63 downto 48)) + unsigned(saida2MuxCD(63 downto 48)));
+end process;  
+--------------------------------------------------------------------------
+
+--------------------------------------------------------------------------
+regSoma1:process(clk, rst)
+begin
+    if rst = '1' then
+        regSomaAB <= (others => '0');
+    elsif (rising_edge(clk)) then
+        if(cargaSomaAB = '1') then
+            regSomaAB <= saidaSomador1;
+        end if;
+    end if;
+end process;
+regSomaABsaida <= regSomaAB;
+
+regSoma2:process(clk, rst)
+begin
+    if rst = '1' then
+        regSomaCD <= (others => '0');
+    elsif (rising_edge(clk)) then
+        if(cargaSomaCD = '1') then
+            regSomaCD <= saidaSomador2;
+        end if;
+    end if;
+end process;
+regSomaCDsaida <= regSomaCD;
+--------------------------------------------------------------------------
+
+--------------------------------------------------------------------------
+somador3:process(regSomaABsaida, regSomaCDsaida, saidaSomador3)
+begin
+    saidaSomador3(15 downto 0) <= std_logic_vector(unsigned(regSomaABsaida(15 downto 0)) + unsigned(regSomaCDsaida(15 downto 0))); 
+    saidaSomador3(31 downto 16) <= std_logic_vector(unsigned(regSomaABsaida(31 downto 16)) + unsigned(regSomaCDsaida(31 downto 16))); 
+    saidaSomador3(47 downto 32) <= std_logic_vector(unsigned(regSomaABsaida(47 downto 32)) + unsigned(regSomaCDsaida(47 downto 32))); 
+    saidaSomador3(63 downto 48) <= std_logic_vector(unsigned(regSomaABsaida(63 downto 48)) + unsigned(regSomaCDsaida(63 downto 48)));
+end process;
+--------------------------------------------------------------------------
+
+--------------------------------------------------------------------------
+regSoma_Fim:process(clk, rst)
+begin
+    if rst = '1' then
+        regSomaFIm <= (others => '0');
+    elsif (rising_edge(clk)) then
+        if(cargaSomaFim = '1') then
+            regSomaFim <= saidaSomador3;
+        end if;
+    end if;
+end process;
+regSomaFimsaida <= regSomaFim;
+--------------------------------------------------------------------------
+
+--------------------------------------------------------------------------
+testador:process(regSomaFimsaida)
+begin
+    if(regSomaFimsaida(15 downto 0) >= "0000010000011010") then                              --maior ou igual a 1050
+        saidaTestador(15 downto 0) <= (others => '0');
+    else
+        saidaTestador(15 downto 0) <= regSomaFimsaida(15 downto 0);
+    end if;
+--///////////////////////////
+    if(regSomaFimsaida(31 downto 16) >= "0000010000011010") then                              --maior ou igual a 1050
+        saidaTestador(31 downto 16) <= (others => '0');
+    else
+        saidaTestador(31 downto 16) <= regSomaFimsaida(31 downto 16);
+    end if;
+--///////////////////////////
+    if(regSomaFimsaida(47 downto 32) >= "0000010000011010") then                              --maior ou igual a 1050
+        saidaTestador(47 downto 32) <= (others => '0');
+    else
+        saidaTestador(47 downto 32) <= regSomaFimsaida(47 downto 32);
+    end if;
+--///////////////////////////
+    if(regSomaFimsaida(63 downto 48) >= "0000010000011010") then                              --maior ou igual a 1050
+        saidaTestador(63 downto 48) <= (others => '0');
+    else
+        saidaTestador(63 downto 48) <= regSomaFimsaida(63 downto 48);
+    end if;
+end process;
+--------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------
+reg_final:process(clk, rst)
+begin
+     if rst = '1' then
+        regFIm <= (others => '0');
+    elsif (rising_edge(clk)) then
+        if(cargaFim = '1') then
+            regFim <= saidaTestador;
+        end if;
+    end if;
+end process;
+matrixF <= regFim;                                                                          --saida da matrixF
+--------------------------------------------------------------------------
+
+--************************************************************************************************
+
+            ---------
+            --LIMBO--
+            ---------
+
+--Parte de Controle*******************************************************************************
+
+--FSM---------------------------------------------------------------------
+FSM:process(clk, rst)
+begin
+    if(rst = '1') then
+        CE <= s0;
+    elsif(rising_edge(clk)) then
+        CE <= NE;
+    end if;
+end process;
+--------------------------------------------------------------------------
+
+--------------------------------------------------------------------------
+control:process(CE, NE, cargaA, cargaB, cargaC, cargaD, cargaSomaAB, cargaSomaCD, cargaSomaFim, cargaFim)
+begin
+    cargaA <= '0';
+    cargaB <= '0';
+    cargaC <= '0';
+    cargaD <= '0';
+    cargaSomaAB <= '0';
+    cargaSomaCD <= '0';
+    cargaSomaFim <= '0';
+    cargaFim <= '0';
+    
+    case CE is
+        when s0 =>
+            cargaA <= '1';
+            cargaB <= '1';
+            cargaC <= '1';
+            cargaD <= '1';
             
-            when "0001" =>                  --soma matrix 16bits    
-                saidaULA(7 downto 0) <= std_logic_vector(unsigned(saidaMuxSoma(7 downto 0)) + unsigned(saidaMuxB(7 downto 0))); 
-                saidaULA(15 downto 8) <= std_logic_vector(unsigned(saidaMuxSoma(15 downto 8)) + unsigned(saidaMuxB(15 downto 8)));
-                saidaULA(23 downto 16) <= std_logic_vector(unsigned(saidaMuxSoma(23 downto 16)) + unsigned(saidaMuxB(23 downto 16)));
-                saidaULA(32 downto 24) <= std_logic_vector(unsigned(saidaMuxSoma(32 downto 24)) + unsigned(saidaMuxB(32 downto 24)));
+            NE <= s2;
             
-            when "0010" =>                   --teste matrix 16bits
-                if(saidaMuxSoma(7 downto 0) >= "0000010000011010") then          --mair ou igual a 1050
-                    matrixF(7 downto 0) <= (others => '0');
-                else
-                    matrixF(7 downto 0) <= saidaMuxSoma(7 downto 0);
-                end if;                    
-                
-                if(saidaMuxSoma(15 downto 8) >= "0000010000011010") then          --mair ou igual a 1050
-                    saidaULA(15 downto 8) <= (others => '0');
-                else
-                    saidaULA(15 downto 8) <= saidaMuxSoma(15 downto 8);
-                end if;
-                
-                if(saidaMuxSoma(23 downto 16) >= "0000010000011010") then          --mair ou igual a 1050
-                    saidaULA(23 downto 16) <= (others => '0');
-                else
-                    saidaULA(23 downto 16) <= saidaMuxSoma(23 downto 16);
-                end if;
-                
-                if(saidaMuxSoma(32 downto 24) >= "0000010000011010") then          --mair ou igual a 1050
-                    saidaULA(32 downto 24) <= (others => '0');
-                else
-                    saidaULA(32 downto 24) <= saidaMuxSoma(32 downto 24);
-                end if;
-
-            when others =>
-                saidaULA <= (others => '0');
-        end case;
+        when s2 =>
+            cargaSomaAB <= '1';
+            cargaSomaCD <= '1';
             
-    end process;
-        
-        
-    regres1: process(clk, rst)
-    begin
-        if rst = '1' then
-            reg1 <= (others => '0');
-        elsif (rising_edge(clk)) then
-            if(carga1 = '1') then
-                reg1 <= saidaULA;
-            end if;
-        end if;
-    end process;
-    reg_Res1 <= reg1;
-    
-    
-    regres2: process(clk, rst)
-    begin
-        if rst = '1' then
-            reg2 <= (others => '0');
-        elsif (rising_edge(clk)) then
-            if(carga2 = '1') then
-                reg2 <= saidaULA;
-            end if;
-        end if;
-    end process;
-    reg_Res2 <= reg2;
+            NE <= s3;
+            
+        when s3 =>
+            cargaSomaFim <= '1';
+            
+            NE <= s4;
+            
+        when s4 =>
+            cargaFim <= '1';
+            
+            NE <= s5;
+            
+        when s5 =>
+            NE <= s5;                       --HALT    
+            
+        when others =>
+            NE <= err;
+    end case;
+end process;
+--------------------------------------------------------------------------
 
-    regres3: process(clk, rst)
-    begin
-        if rst = '1' then
-            reg1 <= (others => '0');
-        elsif (rising_edge(clk)) then
-            if(carga3 = '1') then
-                regsoma <= saidaULA;
-            end if;
-        end if;
-    end process;
-    reg_Res <= regsoma;
-
-    regres4: process(clk, rst)
-    begin
-        if rst = '1' then
-            reg1 <= (others => '0');
-        elsif (rising_edge(clk)) then
-            if(carga1 = '1') then
-                reg1 <= saidaULA;
-            end if;
-        end if;
-    end process;
-    reg_Res1 <= reg1;
-
-
-
-
-
-
-------------------------------------------------------------------------------------------
-    FSM:process(clk, rst)
-    begin
-        if(rst = '1') then
-            CE_1 <= s0;
-        elsif(rising_edge(clk)) then
-            CE_1 <= NE_1;
-        end if;
-    end process;
-    
-    
-    mat:process(clk,rst)
-    begin
-        case CE_1 is
-            when s0 =>
-                matA_B(7 downto 0) <= std_logic_vector((unsigned(matrixA(7 downto 0)) * unsigned(matrixB(7 downto 0))) + (unsigned(matrixA(15 downto 8)) * unsigned(matrixB(23 downto 16))));
-                matC_D(7 downto 0) <= std_logic_vector((unsigned(matrixC(7 downto 0)) * unsigned(matrixD(7 downto 0))) + (unsigned(matrixC(15 downto 8)) * unsigned(matrixD(23 downto 16))));
-                NE_1 <= s1;
-            when s1 =>
-                matA_B(15 downto 8) <= std_logic_vector((unsigned(matrixA(7 downto 0)) * unsigned(matrixB(15 downto 8))) + (unsigned(matrixA(15 downto 8)) * unsigned(matrixB(32 downto 24))));
-                matC_D(15 downto 8) <= std_logic_vector((unsigned(matrixC(7 downto 0)) * unsigned(matrixD(15 downto 8))) + (unsigned(matrixC(15 downto 8)) * unsigned(matrixB(32 downto 24))));
-                NE_1 <= s2;
-            when s2 =>
-                matA_B(23 downto 16) <= std_logic_vector((unsigned(matrixA(23 downto 16)) * unsigned(matrixB(7 downto 0))) + (unsigned(matrixA(32 downto 24)) * unsigned(matrixB(23 downto 16))));
-                matC_D(23 downto 16) <= std_logic_vector((unsigned(matrixC(23 downto 16)) * unsigned(matrixD(7 downto 0))) + (unsigned(matrixC(32 downto 24)) * unsigned(matrixD(23 downto 16))));
-                NE_1 <= s3;
-            when s3 =>
-                matA_B(32 downto 24) <= std_logic_vector((unsigned(matrixA(23 downto 16)) * unsigned(matrixB(15 downto 8))) + (unsigned(matrixA(32 downto 24)) * unsigned(matrixB(32 downto 24))));
-                matC_D(32 downto 24) <= std_logic_vector((unsigned(matrixC(23 downto 16)) * unsigned(matrixD(15 downto 8))) + (unsigned(matrixC(32 downto 24)) * unsigned(matrixD(32 downto 24))));
-                NE_1 <= s4;
-            when s4 =>
-                mat_ADD(7 downto 0) <= std_logic_vector(unsigned(matA_B(7 downto 0)) + unsigned(matC_D(7 downto 0))); 
-                NE_1 <= s5;
-            when s5 =>
-                mat_ADD(15 downto 8) <= std_logic_vector(unsigned(matA_B(15 downto 8)) + unsigned(matC_D(15 downto 8)));
-                NE_1 <= s6;
-            when s6 =>
-                mat_ADD(23 downto 16) <= std_logic_vector(unsigned(matA_B(23 downto 16)) + unsigned(matC_D(23 downto 16)));
-                NE_1 <= s7;
-            when s7 =>
-                mat_ADD(32 downto 24) <= std_logic_vector(unsigned(matA_B(32 downto 24)) + unsigned(matC_D(32 downto 24)));
-                NE_1 <= s8;
-            when s8 =>
-                if(mat_ADD(7 downto 0) >= "0000010000011010") then          --mair ou igual a 1050
-                    matrixF(7 downto 0) <= (others => '0');
-                else
-                    matrixF(7 downto 0) <= mat_ADD(7 downto 0);
-                end if;
-                NE_1 <= s9;
-            when s9 =>
-                if(mat_ADD(15 downto 8) >= "0000010000011010") then          --mair ou igual a 1050
-                    matrixF(15 downto 8) <= (others => '0');
-                else
-                    matrixF(15 downto 8) <= mat_ADD(15 downto 8);
-                end if;
-                NE_1 <= s10;
-            when s10 =>
-                if(mat_ADD(23 downto 16) >= "0000010000011010") then          --mair ou igual a 1050
-                    matrixF(23 downto 16) <= (others => '0');
-                else
-                    matrixF(23 downto 16) <= mat_ADD(23 downto 16);
-                end if;
-                NE_1 <= s11;
-            when s11 =>    
-                if(mat_ADD(32 downto 24) >= "0000010000011010") then          --mair ou igual a 1050
-                    matrixF(32 downto 24) <= (others => '0');
-                else
-                    matrixF(32 downto 24) <= mat_ADD(32 downto 24);
-                end if;
-                NE_1 <= s12;
-            when s12 =>
-                NE_1 <= s12;                 
-            when others =>
-                NE_1 <= err;
-        end case;
-    end process;
+--************************************************************************************************
 
 end Behavioral;
